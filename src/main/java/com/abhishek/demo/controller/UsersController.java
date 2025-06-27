@@ -1,7 +1,7 @@
 package com.abhishek.demo.controller;
 
 import com.abhishek.demo.model.Users;
-import com.abhishek.demo.repository.UsersService;
+import com.abhishek.demo.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
