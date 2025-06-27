@@ -31,4 +31,11 @@ public class UsersController
         Users u = service.registerUser(user);
         return new ResponseEntity<>(u, HttpStatus.CREATED);
     }
+
+
+    @PostMapping("/signIn")
+    public String signIn(@RequestBody Users user)
+    {
+        return service.verify(user);
+    }
 }

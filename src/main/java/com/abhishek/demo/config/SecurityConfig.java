@@ -10,8 +10,10 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -29,10 +31,13 @@ public class SecurityConfig
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception
     {
         // used to disable csrf token
-        security.csrf(customizer -> customizer.disable());
+        security.csrf(AbstractHttpConfigurer::disable);
 
         // ensures user is authenticated before using any resource
-        security.authorizeHttpRequests(request -> request.anyRequest().authenticated());
+        security.authorizeHttpRequests(request -> request
+                        .requestMatchers("signIn", "register")
+                        .permitAll()
+                        .anyRequest().authenticated());
 
         // provides form login feature for authentication
         security.formLogin(Customizer.withDefaults());
@@ -48,27 +53,27 @@ public class SecurityConfig
     }
 
 
-//    @Bean
-//    public UserDetailsService userDetails()
-//    {
-//        UserDetails user1 = User.withDefaultPasswordEncoder().username("aniket").password("aniket@1234").roles("USER").build();
-//        UserDetails user2 = User.withDefaultPasswordEncoder().username("harsh").password("harsh@1234").roles("USER").build();
-//
-//        return new InMemoryUserDetailsManager(user1, user2);
-//    }
-
-    public AuthenticationManager authManager()
+    @Bean
+    public AuthenticationProvider authenticationProvider()
     {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(myUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder()); // Using NoOp
-        return new ProviderManager(provider);
+        return provider;
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder()
     {
         return new BCryptPasswordEncoder(12);
+    }
+
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception
+    {
+        return config.getAuthenticationManager();
     }
 
 }
