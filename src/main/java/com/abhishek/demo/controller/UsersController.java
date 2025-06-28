@@ -36,6 +36,8 @@ public class UsersController
     @PostMapping("/signIn")
     public String signIn(@RequestBody Users user)
     {
+        System.out.println(user.getUsername());
+        System.out.println(user.getPassword());
         return service.verify(user);
     }
 }

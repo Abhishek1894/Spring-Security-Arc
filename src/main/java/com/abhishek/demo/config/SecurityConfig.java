@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -27,29 +29,20 @@ public class SecurityConfig
     @Autowired
     MyUserDetailsService myUserDetailsService;
 
+    @Autowired
+    private JwtFilter jwtFilter;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
-        // used to disable csrf token
-        security.csrf(AbstractHttpConfigurer::disable);
-
-        // ensures user is authenticated before using any resource
-        security.authorizeHttpRequests(request -> request
-                        .requestMatchers("signIn", "register")
-                        .permitAll()
-                        .anyRequest().authenticated());
-
-        // provides form login feature for authentication
-        security.formLogin(Customizer.withDefaults());
-
-        // provides authentication using headers, with this line we can fire api from postman using username and password
-        security.httpBasic(Customizer.withDefaults());
-
-        // makes session policy stateless
-        security.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        // builds and returns security filter chain with above customized filters
-        return security.build();
+        return http.csrf(AbstractHttpConfigurer::disable).
+                authorizeHttpRequests(request -> request
+                        .requestMatchers("signIn", "register").permitAll()
+                        .anyRequest().authenticated()).
+                httpBasic(Customizer.withDefaults()).
+                sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
 
